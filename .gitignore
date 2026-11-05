@@ -1,0 +1,31 @@
+# Terraform local state & provider binaries
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+.terraform.lock.hcl
+
+# Frontend & Node.js build dependencies (keep modules/serenity-core/front/output/ tracked for S3 upload)
+**/node_modules/
+**/front/app/dist/
+
+# Python virtual environments & caches
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+*.py[cod]
+*.egg-info/
+
+# OS & Logs
+*.log
+.DS_Store
+*:Zone.Identifier

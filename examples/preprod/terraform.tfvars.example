@@ -1,0 +1,50 @@
+# Copy this file to terraform.auto.tfvars (gitignored) and replace with your own values.
+dashboard_allowed_ips = [
+  "10.0.0.1/32",
+  "2001:db8:1234:5678::/64",
+]
+
+# (Optional) Initial secrets for the bot.
+# These values are only used upon initial AWS Secrets Manager secret creation.
+# In production, it is recommended to leave this empty and populate tokens directly
+# in the AWS Secrets Manager console to avoid storing plain credentials in local files or git.
+# bot_initial_secrets = {
+#   SLACK_BOT_TOKEN = "xoxb-..."
+#   SLACK_APP_TOKEN = "xapp-..."
+#   GEMINI_APIKEY   = "..."
+#   GITLAB_TOKEN    = "glpat-..."
+#   GITHUB_TOKEN    = "ghp_..."
+#   DD_API_KEY      = "..."
+#   DD_APP_KEY      = "..."
+# }
+
+# (Optional) Custom application & workload context injected into the Serenity-Bot prompt
+# Grounds AI Root Cause Analysis (RCA) in your actual microservices, repositories, and runbooks.
+# application_context = {
+#   organization_name    = "My Company"
+#   business_domain      = "E-Commerce & Logistics"
+#   architecture_summary = "Microservices architecture on AWS ECS Graviton with Aurora PostgreSQL"
+#   services = [
+#     {
+#       name        = "order-api"
+#       description = "Order validation and checkout processing service"
+#       tech_stack  = "Node.js / Express / Redis / PostgreSQL"
+#       repository  = "github.com/my-org/order-service"
+#       log_group   = "/aws/ecs/prod-order-api"
+#       criticality = "HIGH"
+#     },
+#     {
+#       name        = "auth-service"
+#       description = "OAuth2 authentication provider and JWT session management"
+#       tech_stack  = "Python / FastAPI / DynamoDB"
+#       repository  = "gitlab.com/my-org/auth-api"
+#       log_group   = "/aws/ecs/prod-auth"
+#       criticality = "HIGH"
+#     }
+#   ]
+#   runbooks = {
+#     "HighLatency"      = "https://wiki.my-company.com/runbooks/high-latency"
+#     "PaymentFailed5XX" = "https://wiki.my-company.com/runbooks/payment-errors"
+#   }
+#   extra_notes = "order-api relies directly on auth-service to validate JWT tokens."
+# }

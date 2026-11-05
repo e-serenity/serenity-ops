@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  terraform:
+    name: Terraform Format & Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.5"
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive
+
+      - name: Validate serenity-core module
+        working-directory: modules/serenity-core
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Validate serenity-ses module
+        working-directory: modules/serenity-ses
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+  python:
+    name: Python API & Agent Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile Serverless Live API Lambda
+        run: python -m py_compile modules/serenity-core/lambda/api/index.py
+
+      - name: Install uv & Run Serenity-Bot Unit Tests
+        working-directory: modules/serenity-bot/bot
+        run: |
+          pip install uv
+          uv sync --frozen
+          uv run pytest -q
+
+  frontend:
+    name: Web Console TypeScript & Vite Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: modules/serenity-core/front/app
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 26
+        uses: actions/setup-node@v4
+        with:
+          node-version: "26"
+          cache: "npm"
+          cache-dependency-path: modules/serenity-core/front/app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck & Build production bundle
+        run: npm run build
+
+  docker:
+    name: Build & Publish Serenity-Bot ARM64 Image (GHCR)
+    needs: [terraform, python, frontend]
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push ARM64 image to GHCR
+        uses: docker/build-push-action@v6
+        with:
+          context: modules/serenity-bot/bot
+          platforms: linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ghcr.io/e-serenity/serenity-bot:stable
+            ghcr.io/e-serenity/serenity-bot:latest
+            ghcr.io/e-serenity/serenity-bot:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
